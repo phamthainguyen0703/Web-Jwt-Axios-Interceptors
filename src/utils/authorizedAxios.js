@@ -7,12 +7,19 @@ let authorizeAxiosInstance = axios.create();
 authorizeAxiosInstance.defaults.timeout = 1000 * 60 * 10;
 
 //withCredentialsL: cho phép axios tự động đính kèm và gửi cookie trong mỗi request lên BE (cơ chế httpOnly Cookie)
-// authorizeAxiosInstance.defaults.withCredentials = true;
+authorizeAxiosInstance.defaults.withCredentials = true;
 
 // Add a request interceptor: can thiệp vào giữa các request API
 authorizeAxiosInstance.interceptors.request.use(
   (config) => {
-    // Do something before request is sent
+    //lấy accessToken từ localStorage và đính kèm vào header
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (accessToken) {
+      //thêm Bearer vì tuân thủ theo tiêu chuẩn OAuth 2.0 trong việc xác định loại token đang sử dụng
+      //Bearer: định nghĩa loại token dành cho việc xác thực và ủy quyền
+      config.headers.Authorization = `Bearer $(accessToken)`;
+    }
     return config;
   },
   (error) => {

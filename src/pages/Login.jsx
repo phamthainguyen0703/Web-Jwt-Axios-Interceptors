@@ -9,8 +9,8 @@ import { useForm } from "react-hook-form";
 import Typography from "@mui/material/Typography";
 import TrungQuanDevIcon from "../assets/trungquandev-logo.png";
 import authorizeAxiosInstance from "~/utils/authorizedAxios";
-import { toast } from "react-toastify";
 import { API_ROOT } from "~/utils/constants";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const {
@@ -19,6 +19,7 @@ function Login() {
     formState: { errors },
   } = useForm();
 
+  const navigate = useNavigate();
   const submitLogIn = async (data) => {
     console.log("submit login: ", data);
     const res = await authorizeAxiosInstance.post(
@@ -26,7 +27,18 @@ function Login() {
       data
     );
     console.log(res.data);
-    toast.success(res.data?.message);
+    const userInfo = {
+      id: res.data.id,
+      email: res.data.email,
+    };
+
+    //lưu token và thông tin user vào localStorage, dùng js thuần
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+    localStorage.setItem("userInfo", JSON.stringify(userInfo));
+
+    //điều hường tới Dashboard
+    navigate("/dashboard");
   };
 
   return (

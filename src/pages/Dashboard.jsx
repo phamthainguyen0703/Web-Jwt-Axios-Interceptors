@@ -18,6 +18,10 @@ function Dashboard() {
         `${API_ROOT}/v1/dashboards/access`
       );
       console.log(res.data);
+      console.log(
+        "data from localStorage: ",
+        JSON.parse(localStorage.getItem("userInfo"))
+      );
       setUser(res.data);
     };
     fetchData();
