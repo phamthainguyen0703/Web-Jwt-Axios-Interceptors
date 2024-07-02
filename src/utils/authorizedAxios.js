@@ -18,7 +18,7 @@ authorizeAxiosInstance.interceptors.request.use(
     if (accessToken) {
       //thêm Bearer vì tuân thủ theo tiêu chuẩn OAuth 2.0 trong việc xác định loại token đang sử dụng
       //Bearer: định nghĩa loại token dành cho việc xác thực và ủy quyền
-      config.headers.Authorization = `Bearer $(accessToken)`;
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
