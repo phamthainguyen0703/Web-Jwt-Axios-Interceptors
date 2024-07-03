@@ -33,8 +33,8 @@ function Login() {
     };
 
     //lưu token và thông tin user vào localStorage, dùng js thuần
-    // localStorage.setItem("accessToken", res.data.accessToken);
-    // localStorage.setItem("refreshToken", res.data.refreshToken);
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
     localStorage.setItem("userInfo", JSON.stringify(userInfo));
 
     //điều hường tới Dashboard

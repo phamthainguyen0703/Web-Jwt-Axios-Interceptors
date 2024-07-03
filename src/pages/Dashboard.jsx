@@ -7,6 +7,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Divider from "@mui/material/Divider";
 import authorizeAxiosInstance from "~/utils/authorizedAxios";
 import { useNavigate } from "react-router-dom";
+import { handleLogoutAPI } from "~/apis";
 
 import { API_ROOT } from "~/utils/constants";
 
@@ -31,16 +32,9 @@ function Dashboard() {
   }, []);
 
   const handleLogout = async () => {
-    // trường hợp 1: dùng  localStorage để lưu userInfo > xóa thông tin user trong localStorage phía FE
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    await handleLogoutAPI();
     localStorage.removeItem("userInfo");
 
-    // trường hợp 2: dùng  http only cookies > call API remove cookies
-    await authorizeAxiosInstance.delete(`${API_ROOT}/v1/users/logout`);
-    setUser(null);
-
-    //điều hướng về trang login
     navigate("/login");
   };
 
