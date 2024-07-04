@@ -29,6 +29,9 @@ authorizeAxiosInstance.interceptors.request.use(
   }
 );
 
+//mục đích refreshTokenPromise để khi nhận yêu cầu refreshToken đầu tiên thì hold lại việc gọi API refreshToken cho tới khi xong xuôi thì mới retry lại những api lỗi trước đó
+let refreshTokenPromise = null;
+
 // Add a response interceptor: can thiệp vào giữa các response API
 authorizeAxiosInstance.interceptors.response.use(
   (response) => {
@@ -42,43 +45,49 @@ authorizeAxiosInstance.interceptors.response.use(
       handleLogoutAPI().then(() => {
         localStorage.removeItem("userInfo");
 
-        // location.href = "/login";
+        location.href = "/login";
       });
     }
 
     //nếu nhận mã 410 từ BE, gọi api refresh token để làm mới accessToken
     const originalRequest = error.config;
     console.log("originalRequest: ", originalRequest);
-    if (error.response?.status === 410 && !originalRequest._retry) {
-      //gán thêm giá trị _retry = true trong thời gian chờ, để việc refresh token chỉ luôn gọi 1 lần duy nhất tại 1 thời điểm
-      originalRequest._retry = true;
+    if (error.response?.status === 410 && originalRequest) {
+      if (!refreshTokenPromise) {
+        // lấy refreshToken từ LocalStorage (trường hợp LocalStorage)
+        const refreshToken = localStorage.getItem("refreshToken");
+        // gọi api refreshToken
+        refreshTokenPromise = refreshTokenAPI(refreshToken)
+          .then((res) => {
+            //lấy và gán lại accessToken vào LocalStorage (trường hợp LocalStorage)
+            const { accessToken } = res.data;
+            localStorage.setItem("accessToken", accessToken);
+            authorizeAxiosInstance.defaults.headers.Authorization = `Bearer ${accessToken}`;
 
-      // lấy refreshToken từ LocalStorage (trường hợp LocalStorage)
-      const refreshToken = localStorage.getItem("refreshToken");
-      // gọi api refreshToken
-      return refreshTokenAPI(refreshToken)
-        .then((res) => {
-          //lấy và gán lại accessToken vào LocalStorage (trường hợp LocalStorage)
-          const { accessToken } = res.data;
-          localStorage.setItem("accessToken", accessToken);
-          authorizeAxiosInstance.defaults.headers.Authorization = `Bearer ${accessToken}`;
+            // đồng thời lưu ý là access token cũng đã được update lại cookie (trường hợp cookie)
+          })
+          .catch((_error) => {
+            // nếu nhận bất kì lỗi nào từ api refresh token ==> logout luôn
+            console.log("error: ", _error);
+            handleLogoutAPI().then(() => {
+              localStorage.removeItem("userInfo");
 
-          // đồng thời lưu ý là access token cũng đã được update lại cookie (trường hợp cookie)
-
-          // bước cuối(quan trọng): return lại axios instance  kết hợp cái originalConfig để gọi lại những api ban đầu bị lỗi
-          return authorizeAxiosInstance(originalRequest);
-        })
-        .catch((_error) => {
-          // nếu nhận bất kì lỗi nào từ api refresh token ==> logout luôn
-          console.log("error: ", _error);
-          handleLogoutAPI().then(() => {
-            localStorage.removeItem("userInfo");
-
-            location.href = "/login";
+              location.href = "/login";
+            });
+            return Promise.reject(_error);
+          })
+          .finally(() => {
+            //dù API refreshToken có thành công hay không hay lỗi thì vẫn luôn gán lại refreshTokenPromise về null như ban đầu
+            refreshTokenPromise = null;
           });
-          return Promise.reject(_error);
-        });
+      }
+      // cuối cùng return lại refreshTokenPromise trong trường hợp success ở đây
+      return refreshTokenPromise.then(() => {
+        // (quan trọng): return lại axios instance  kết hợp cái originalConfig để gọi lại những api ban đầu bị lỗi
+        return authorizeAxiosInstance(originalRequest);
+      });
     }
+
     // xử lí lỗi tập trung phần hiển thị thông báo lỗi trả về từ mọi API (viết code 1 lần: clean code)
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     // Do something with response error
