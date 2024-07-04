@@ -78,8 +78,8 @@ function Login() {
               }}
             >
               <Box>
-                <Typography>Hint: trungquandev.official@gmail.com</Typography>
-                <Typography>Pass: trungquandev@123</Typography>
+                <Typography>Hint: phamthainguyen0703@gmail.com</Typography>
+                <Typography>Pass: phamthainguyen@123</Typography>
               </Box>
             </Box>
             <Box sx={{ padding: "0 1em 1em 1em" }}>
